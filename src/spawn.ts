@@ -1,11 +1,11 @@
 const roomName = "W14N37";
-const spawn1 = Game.spawns["Spawn1"];
-const energy = spawn1.room.energyAvailable;
 
-console.log("Spawn1 Energy Available:", spawn1.room.energyAvailable);
-
-export default function operateSpawn() {
-  if (energy >= 800) {
+export default function operateSpawn(spawn) {
+  const energy = spawn.room.energyAvailable;
+  const roomName = "W14N37";
+  console.log("Spawn1 Energy Available:", energy);
+  if (energy >= 750) {
+    console.log("energy is greater or equal to 750");
     let builders = 0;
     let upgraders = 0;
     let harvesters = 0;
@@ -21,47 +21,65 @@ export default function operateSpawn() {
       }
       // console.log(`builders: ${builders}, upgraders: ${upgraders}, harvesters: ${harvesters}`);
     }
-    if (builders >= upgraders && harvesters >= upgraders) {
-      spawnUpgrader();
+    if (builders >= harvesters && upgraders >= harvesters && harvesters < 7) {
+      spawnHarvester(spawn);
     } else if (harvesters >= builders && upgraders >= builders) {
-      spawnBuilder();
+      spawnBuilder(spawn);
     } else {
-      spawnHarvester();
+      spawnUpgrader(spawn);
     }
   }
 }
+
+const spawnActions = () => {
+  // check totals of each role
+};
 
 // util function
 function getRandomInt(max: number) {
   return Math.floor(Math.random() * max);
 }
 
-const spawnHarvester = () => {
-  spawn1.spawnCreep(
-    [WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE],
-    `Harvester${getRandomInt(10000)}`,
-    {
-      memory: { role: "harvester", room: roomName, working: false }
-    }
-  );
+const spawnHarvester = spawn => {
+  const body = [WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE];
+  const memory: HarvesterMemory = {
+    role: "harvester",
+    room: roomName,
+    harvesting: false
+  };
+  const result = spawn.spawnCreep(body, `Harvester${getRandomInt(10000)}`, {
+    memory
+  });
+  console.log("Harvesters in Memory:", Memory.tally.harvesters);
+  if (result === OK) {
+    console.log("Creep successfully spawned harvester.", result);
+  } else {
+    console.log("Failed to spawn creep.", result);
+  }
 };
 
-const spawnUpgrader = () => {
-  spawn1.spawnCreep(
-    [WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE],
-    `Upgrader${getRandomInt(10000)}`,
-    {
-      memory: { role: "upgrader", room: roomName, working: false }
-    }
-  );
+const spawnUpgrader = spawn => {
+  const body = [WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE];
+  const memory: UpgraderMemory = {
+    role: "upgrader",
+    room: roomName,
+    upgrading: false
+  };
+  spawn.spawnCreep(body, `Upgrader${getRandomInt(10000)}`, {
+    memory
+  });
+  Memory.tally.upgraders++;
 };
 
-const spawnBuilder = () => {
-  spawn1.spawnCreep(
-    [WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE],
-    `Builder${getRandomInt(10000)}`,
-    {
-      memory: { role: "builder", room: roomName, working: false }
-    }
-  );
+const spawnBuilder = spawn => {
+  const body = [WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE];
+  const memory: BuilderMemory = {
+    role: "builder",
+    room: roomName,
+    building: false
+  };
+  spawn.spawnCreep(body, `Builder${getRandomInt(10000)}`, {
+    memory
+  });
+  Memory.tally.builders++;
 };

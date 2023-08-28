@@ -6,29 +6,38 @@ export const roleHarvester = {
     if (creep.hits < creep.hitsMax) {
       // creep is hurt, run to tower
       var targets = creep.room.find(FIND_STRUCTURES, {
-        filter: (structure) => {
-          return (
-            (
-              structure.structureType == STRUCTURE_TOWER)
-          );
-        },
+        filter: structure => {
+          return structure.structureType == STRUCTURE_TOWER;
+        }
       });
       creep.moveTo(targets[0]);
     } else {
-
-
-    if (creep.store.getFreeCapacity() > 0) {
-      // has storage room to harvest
-      var sources = creep.room.find(FIND_SOURCES);
-      creep.memory.sourceId = creep.pos.findClosestByRange(FIND_SOURCES).id;
-      const source = Game.getObjectById(creep.memory.sourceId);
-      if (creep.harvest(source) == ERR_NOT_IN_RANGE) {
-        creep.moveTo(source, { visualizePathStyle: { stroke: '#ffaa00' } });
+      console.log(creep.name, "Harvesting:", creep.memory.harvesting);
+      console.log("Free capacity", creep.store.getFreeCapacity());
+      // creep.memory.harvesting && freecapacity > 0, harvest
+      if (creep.memory.harvesting && creep.store.getFreeCapacity() > 0) {
+        if (!creep.memory.sourceId) {
+          creep.memory.sourceId = creep.pos.findClosestByRange(FIND_SOURCES).id;
+        }
+        const source = Game.getObjectById(creep.memory.sourceId);
+        if (creep.harvest(source) == ERR_NOT_IN_RANGE) {
+          creep.moveTo(source, { visualizePathStyle: { stroke: "#ffaa00" } });
+        }
       }
-    } else {
-      // go deposit stored energy
-      findClosestDeposit(creep);
+      // creep.memory.harvesting and freecapacity == 0, set harvesting to false
+      if (creep.memory.harvesting && creep.store.getFreeCapacity() == 0) {
+        creep.memory.harvesting = false;
+        creep.say("Depositing energy");
+      }
+      // if !harvesting && getUsedCapacity < 50, set harvesting to true
+      if (!creep.memory.harvesting && creep.store.getUsedCapacity() < 50) {
+        creep.memory.harvesting = true;
+        creep.say("Harvesting");
+      }
+      // if !harvesting , go deposit
+      if (!creep.memory.harvesting) {
+        findClosestDeposit(creep);
+      }
     }
   }
-  },
 };

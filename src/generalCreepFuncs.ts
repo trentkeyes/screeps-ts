@@ -25,6 +25,8 @@ const findClosestDeposit = (creep: Creep) => {
   }
 };
 
+// harvest, then deposit or upgrade
+
 // name new creep
 
 // find closest source and not busy
@@ -72,4 +74,33 @@ const findClosestDeposit = (creep: Creep) => {
 //   creep.moveTo(targetSource);
 // }
 
-export { findClosestDeposit };
+// withdraw energy
+
+// filter through closest structure with energy
+
+const withdrawEnergy = (creep: Creep) => {
+  const test = creep.room.find(FIND_STRUCTURES, {
+    filter: structure => {
+      return (
+        (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_SPAWN) &&
+        structure.store.getUsedCapacity(RESOURCE_ENERGY) >= 50
+      );
+    }
+  });
+  console.log("Withdraw structures array", test);
+  // is this just giving me the first option of an array (ie spawn). yes. sort it to get the closest
+  const [storage] = creep.room.find(FIND_STRUCTURES, {
+    filter: structure => {
+      return (
+        (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_SPAWN) &&
+        structure.store.getUsedCapacity(RESOURCE_ENERGY) >= 50
+      );
+    }
+  });
+  if (creep.withdraw(storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+    creep.moveTo(storage);
+  }
+  return storage;
+};
+
+export { findClosestDeposit, withdrawEnergy };
