@@ -12,8 +12,6 @@ export const roleHarvester = {
       });
       creep.moveTo(targets[0]);
     } else {
-      console.log(creep.name, "Harvesting:", creep.memory.harvesting);
-      console.log("Free capacity", creep.store.getFreeCapacity());
       // creep.memory.harvesting && freecapacity > 0, harvest
       if (creep.memory.harvesting && creep.store.getFreeCapacity() > 0) {
         if (!creep.memory.sourceId) {
@@ -33,6 +31,7 @@ export const roleHarvester = {
       if (!creep.memory.harvesting && creep.store.getUsedCapacity() < 50) {
         creep.memory.harvesting = true;
         creep.say("Harvesting");
+        creep.memory.sourceId = creep.pos.findClosestByPath(FIND_SOURCES).id;
       }
       // if !harvesting , go deposit
       if (!creep.memory.harvesting) {

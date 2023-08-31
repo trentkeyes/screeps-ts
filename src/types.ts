@@ -21,6 +21,8 @@ declare global {
   interface CreepMemory {
     role: string;
     room: string;
+    sourceId: Id<Source>;
+    depositId: Id<Structure>;
   }
 
   interface HarvesterMemory extends CreepMemory {
@@ -33,6 +35,10 @@ declare global {
 
   interface UpgraderMemory extends CreepMemory {
     upgrading: boolean;
+  }
+
+  interface RepairerMemory extends CreepMemory {
+    repairing: boolean;
   }
 
   // Syntax for adding proprties to `global` (ex "global.log")

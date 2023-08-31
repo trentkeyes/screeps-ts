@@ -5,19 +5,29 @@ const findClosestDeposit = (creep: Creep) => {
       return (
         (structure.structureType == STRUCTURE_EXTENSION ||
           structure.structureType == STRUCTURE_SPAWN ||
-          structure.structureType == STRUCTURE_TOWER) &&
+          structure.structureType == STRUCTURE_TOWER ||
+          structure.structureType == STRUCTURE_CONTAINER) &&
         structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0
       );
     }
   });
-  const closestDeposit = creep.pos.findClosestByRange(targets);
+  // console.log(targets)
+  // if (!creep.memory.depositId) {
+  //   creep.memory.depositId = creep.pos.findClosestByPath(targets).id;
+  // }
+  // // const closestDeposit = creep.pos.findClosestByRange(targets);
   const closestDepositPath = creep.pos.findClosestByPath(targets);
-  if (closestDepositPath) {
-    if (creep.transfer(closestDepositPath, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-      creep.moveTo(closestDepositPath, {
-        visualizePathStyle: { stroke: "#ffffff" }
-      });
-    }
+
+  // if (creep.memory.depositId) {
+  //   creep.pos.findClosestByPath(targets).id !=
+  //   const target = Game.getObjectById(creep.memory.depositId);
+  //   if (target.store)
+  //   console.log(creep.pos.findClosestByPath(targets));
+  if (creep.transfer(closestDepositPath, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+    creep.say("transferring to deposit");
+    creep.moveTo(closestDepositPath, {
+      visualizePathStyle: { stroke: "#ffffff" }
+    });
   } else {
     var controller = creep.room.controller;
     creep.moveTo(controller);
@@ -79,28 +89,19 @@ const findClosestDeposit = (creep: Creep) => {
 // filter through closest structure with energy
 
 const withdrawEnergy = (creep: Creep) => {
-  const test = creep.room.find(FIND_STRUCTURES, {
+  const storage = creep.room.find(FIND_STRUCTURES, {
     filter: structure => {
       return (
-        (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_SPAWN) &&
+        (structure.structureType == STRUCTURE_SPAWN || structure.structureType == STRUCTURE_CONTAINER) &&
         structure.store.getUsedCapacity(RESOURCE_ENERGY) >= 50
       );
     }
   });
-  console.log("Withdraw structures array", test);
-  // is this just giving me the first option of an array (ie spawn). yes. sort it to get the closest
-  const [storage] = creep.room.find(FIND_STRUCTURES, {
-    filter: structure => {
-      return (
-        (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_SPAWN) &&
-        structure.store.getUsedCapacity(RESOURCE_ENERGY) >= 50
-      );
-    }
-  });
-  if (creep.withdraw(storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-    creep.moveTo(storage);
+  const target = creep.pos.findClosestByPath(storage);
+  if (creep.withdraw(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+    creep.moveTo(target);
   }
-  return storage;
+  return target;
 };
 
 export { findClosestDeposit, withdrawEnergy };
