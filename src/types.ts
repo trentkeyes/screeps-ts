@@ -41,6 +41,11 @@ declare global {
     repairing: boolean;
   }
 
+  type BodyPartConfig = {
+    type: BodyPartConstant;
+    count: number;
+  };
+
   // Syntax for adding proprties to `global` (ex "global.log")
   namespace NodeJS {
     interface Global {

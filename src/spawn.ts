@@ -5,79 +5,42 @@ export default function operateSpawn(spawn) {
   const roomName = "W14N37";
   const { total, harvesters, upgraders, builders, repairers } = countCreeps();
   console.log("Operating spawn with energy:", energy);
-  const small = [WORK, CARRY, MOVE, MOVE];
-  const medium = [WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE];
-  const large = [WORK, WORK, WORK, WORK, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE];
-  const xl = [
-    WORK,
-    WORK,
-    WORK,
-    WORK,
-    WORK,
-    WORK,
-    CARRY,
-    CARRY,
-    CARRY,
-    CARRY,
-    CARRY,
-    MOVE,
-    MOVE,
-    MOVE,
-    MOVE,
-    MOVE,
-    MOVE,
-    MOVE,
-    MOVE,
-    MOVE,
-    MOVE,
-    MOVE
-  ];
+  const small = bodyGenerator([
+    { type: WORK, count: 1 },
+    { type: CARRY, count: 1 },
+    { type: MOVE, count: 2 }
+  ]);
+  const medium = bodyGenerator([
+    { type: WORK, count: 3 },
+    { type: CARRY, count: 3 },
+    { type: MOVE, count: 6 }
+  ]);
+  const large = bodyGenerator([
+    { type: WORK, count: 4 },
+    { type: CARRY, count: 4 },
+    { type: MOVE, count: 8 }
+  ]);
+  const xl = bodyGenerator([
+    { type: WORK, count: 6 },
+    { type: CARRY, count: 6 },
+    { type: MOVE, count: 12 }
+  ]);
 
+  if (energy >= 250 && harvesters < 3) {
+    spawnHarvester(spawn, small);
+  }
   if (energy >= 750 && repairers < 2) {
     spawnRepairer(spawn, medium);
   }
-  if (energy >= 1500 && harvesters <= total / 2) {
-    spawnHarvester(spawn, xl);
-  } else {
-    spawnUpgrader(spawn, xl);
+  if (total < 18) {
+    if (energy >= 1500 && harvesters <= total / 2) {
+      spawnHarvester(spawn, xl);
+    } else if (energy >= 1500) {
+      spawnUpgrader(spawn, xl);
+    }
   }
 
-  // // make small harvesters if colony is dying
-  // if (energy >= 250 && harvesters < 3 && total < 6) {
-  //   spawnHarvester(spawn, small);
-  // }
-  // if (energy >= 750 && repairers < 3) {
-  //   spawnRepairer(spawn, medium);
-  // }
-  // // make an even split of medium creeps with 3 roles
-  // if (energy >= 750 && total < 8) {
-  //   if (builders >= harvesters && upgraders >= harvesters && harvesters < 7) {
-  //     spawnHarvester(spawn, medium);
-  //   } else if (harvesters >= builders && upgraders >= builders) {
-  //     spawnBuilder(spawn, medium);
-  //   } else {
-  //     spawnUpgrader(spawn, medium);
-  //   }
-  // }
-  // // even split of larger creeps
-  // if (energy >= 1000 && total < 12) {
-  //   if (builders >= harvesters && upgraders >= harvesters && harvesters < 7) {
-  //     spawnHarvester(spawn, large);
-  //   } else if (harvesters >= builders && upgraders >= builders) {
-  //     spawnBuilder(spawn, large);
-  //   } else {
-  //     spawnUpgrader(spawn, large);
-  //   }
-  // }
-  // if (energy >= 1500) {
-  //   if (builders >= harvesters && upgraders >= harvesters && harvesters < 7) {
-  //     spawnHarvester(spawn, xl);
-  //   } else if (harvesters >= builders && upgraders >= builders) {
-  //     spawnBuilder(spawn, xl);
-  //   } else {
-  //     spawnUpgrader(spawn, xl);
-  //   }
-  // }
+  console.log(JSON.stringify(countCreeps()));
 }
 
 const countCreeps = () => {
@@ -128,7 +91,7 @@ const spawnHarvester = (spawn, size) => {
     sourceId: null,
     depositId: null
   };
-  const result = spawn.spawnCreep(size, `Harvester${getRandomInt(10000)}`, {
+  const result = spawn.spawnCreep(size, `Harvester${Game.time}-${getRandomInt(1000)}`, {
     memory
   });
   console.log("Harvesters in Memory:", Memory.tally.harvesters);
@@ -137,10 +100,10 @@ const spawnHarvester = (spawn, size) => {
   } else {
     console.log("Failed to spawn creep.", result);
   }
+  return result;
 };
 
 const spawnUpgrader = (spawn, size) => {
-  const body = [WORK, WORK, WORK, WORK, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE];
   const memory: UpgraderMemory = {
     role: "upgrader",
     room: roomName,
@@ -148,14 +111,13 @@ const spawnUpgrader = (spawn, size) => {
     sourceId: null,
     depositId: null
   };
-  spawn.spawnCreep(size, `Upgrader${getRandomInt(10000)}`, {
+  spawn.spawnCreep(size, `Upgrader${Game.time}-${getRandomInt(1000)}`, {
     memory
   });
   Memory.tally.upgraders++;
 };
 
 const spawnBuilder = (spawn, size) => {
-  const body = [WORK, WORK, WORK, WORK, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE];
   const memory: BuilderMemory = {
     role: "builder",
     room: roomName,
@@ -163,7 +125,7 @@ const spawnBuilder = (spawn, size) => {
     sourceId: null,
     depositId: null
   };
-  spawn.spawnCreep(size, `Builder${getRandomInt(10000)}`, {
+  spawn.spawnCreep(size, `Builder${Game.time}-${getRandomInt(1000)}`, {
     memory
   });
   Memory.tally.builders++;
@@ -177,8 +139,55 @@ const spawnRepairer = (spawn, size) => {
     sourceId: null,
     depositId: null
   };
-  spawn.spawnCreep(size, `Repairer${getRandomInt(10000)}`, {
+  spawn.spawnCreep(size, `Repairer${Game.time}-${getRandomInt(1000)}`, {
     memory
   });
   Memory.tally.builders++;
 };
+
+const bodyGenerator = (parts: BodyPartConfig[]): BodyPartConstant[] => {
+  const body: BodyPartConstant[] = [];
+  for (const part of parts) {
+    for (let i = 0; i < part.count; i++) {
+      body.push(part.type);
+    }
+  }
+  return body;
+};
+
+// // make small harvesters if colony is dying
+// if (energy >= 250 && harvesters < 3 && total < 6) {
+//   spawnHarvester(spawn, small);
+// }
+// if (energy >= 750 && repairers < 3) {
+//   spawnRepairer(spawn, medium);
+// }
+// // make an even split of medium creeps with 3 roles
+// if (energy >= 750 && total < 8) {
+//   if (builders >= harvesters && upgraders >= harvesters && harvesters < 7) {
+//     spawnHarvester(spawn, medium);
+//   } else if (harvesters >= builders && upgraders >= builders) {
+//     spawnBuilder(spawn, medium);
+//   } else {
+//     spawnUpgrader(spawn, medium);
+//   }
+// }
+// // even split of larger creeps
+// if (energy >= 1000 && total < 12) {
+//   if (builders >= harvesters && upgraders >= harvesters && harvesters < 7) {
+//     spawnHarvester(spawn, large);
+//   } else if (harvesters >= builders && upgraders >= builders) {
+//     spawnBuilder(spawn, large);
+//   } else {
+//     spawnUpgrader(spawn, large);
+//   }
+// }
+// if (energy >= 1500) {
+//   if (builders >= harvesters && upgraders >= harvesters && harvesters < 7) {
+//     spawnHarvester(spawn, xl);
+//   } else if (harvesters >= builders && upgraders >= builders) {
+//     spawnBuilder(spawn, xl);
+//   } else {
+//     spawnUpgrader(spawn, xl);
+//   }
+// }
