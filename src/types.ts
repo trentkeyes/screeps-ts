@@ -11,10 +11,11 @@ declare global {
   interface Memory {
     uuid: number;
     log: any;
-    tally: {
+    count: {
       harvesters: number;
       upgraders: number;
       builders: number;
+      repairers: number;
     };
   }
 

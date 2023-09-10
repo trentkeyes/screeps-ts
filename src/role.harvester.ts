@@ -14,10 +14,20 @@ export const roleHarvester = {
     } else {
       // creep.memory.harvesting && freecapacity > 0, harvest
       if (creep.memory.harvesting && creep.store.getFreeCapacity() > 0) {
+        const findSources = () => {
+          creep.pos.findClosestByPath(FIND_SOURCES, {
+            filter: (source: Source) => {
+              return source.energy > 0;
+            }
+          }).id;
+        };
         if (!creep.memory.sourceId) {
-          creep.memory.sourceId = creep.pos.findClosestByRange(FIND_SOURCES).id;
+          creep.memory.sourceId = findSources();
         }
+
         const source = Game.getObjectById(creep.memory.sourceId);
+        // check if source has energy
+        // if source.energy == 0, creep.memory.sourceId = findSources();
         if (creep.harvest(source) == ERR_NOT_IN_RANGE) {
           creep.moveTo(source, { visualizePathStyle: { stroke: "#ffaa00" } });
         }

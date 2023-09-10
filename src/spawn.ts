@@ -1,9 +1,7 @@
-const roomName = "W14N37";
-
-export default function operateSpawn(spawn) {
+export default function operateSpawn(spawn: StructureSpawn) {
   const energy = spawn.room.energyAvailable;
-  const roomName = "W14N37";
-  const { total, harvesters, upgraders, builders, repairers } = countCreeps();
+  const { harvesters, upgraders, builders, repairers } = Memory.count;
+  const total = harvesters + upgraders + builders + repairers;
   console.log("Operating spawn with energy:", energy);
   const small = bodyGenerator([
     { type: WORK, count: 1 },
@@ -26,6 +24,7 @@ export default function operateSpawn(spawn) {
     { type: MOVE, count: 12 }
   ]);
 
+  // write switch statements
   if (energy >= 250 && harvesters < 3) {
     spawnHarvester(spawn, small);
   }
@@ -36,36 +35,17 @@ export default function operateSpawn(spawn) {
     if (energy >= 1500 && harvesters <= total / 2) {
       spawnHarvester(spawn, xl);
     } else if (energy >= 1500) {
-      spawnUpgrader(spawn, xl);
+      if (upgraders <= builders) {
+        spawnUpgrader(spawn, xl);
+      } else if (builders < upgraders) {
+        spawnBuilder(spawn, xl);
+      }
     }
   }
+  // creep spawning plan
 
-  console.log(JSON.stringify(countCreeps()));
+  console.log(JSON.stringify(Memory.count));
 }
-
-const countCreeps = () => {
-  let builders = 0;
-  let upgraders = 0;
-  let harvesters = 0;
-  let repairers = 0;
-  for (const name in Game.creeps) {
-    if (Game.creeps[name].memory.role === "builder") {
-      builders++;
-    }
-    if (Game.creeps[name].memory.role === "upgrader") {
-      upgraders++;
-    }
-    if (Game.creeps[name].memory.role === "harvester") {
-      harvesters++;
-    }
-    if (Game.creeps[name].memory.role === "repairer") {
-      repairers++;
-    }
-    // console.log(`builders: ${builders}, upgraders: ${upgraders}, harvesters: ${harvesters}`);
-  }
-  const total = builders + upgraders + harvesters + repairers;
-  return { builders, upgraders, harvesters, repairers, total };
-};
 
 // const spawnActions = ({builders, upgraders, harvesters}) => {
 //   // check totals of each role
@@ -83,18 +63,21 @@ function getRandomInt(max: number) {
   return Math.floor(Math.random() * max);
 }
 
-const spawnHarvester = (spawn, size) => {
+const spawnHarvester = (spawn: StructureSpawn, body) => {
   const memory: HarvesterMemory = {
     role: "harvester",
-    room: roomName,
+    room: spawn.room.name,
     harvesting: false,
     sourceId: null,
     depositId: null
   };
-  const result = spawn.spawnCreep(size, `Harvester${Game.time}-${getRandomInt(1000)}`, {
+  const result = spawn.spawnCreep(body, `Harvester${Game.time}-${getRandomInt(1000)}`, {
     memory
   });
-  console.log("Harvesters in Memory:", Memory.tally.harvesters);
+  if (result === OK) {
+    Memory.count.harvesters++;
+  }
+  console.log("Harvesters in Memory:", Memory.count.harvesters);
   if (result === OK) {
     console.log("Creep successfully spawned harvester.", result);
   } else {
@@ -103,50 +86,57 @@ const spawnHarvester = (spawn, size) => {
   return result;
 };
 
-const spawnUpgrader = (spawn, size) => {
+const spawnUpgrader = (spawn: StructureSpawn, body: BodyPartConstant[]) => {
   const memory: UpgraderMemory = {
     role: "upgrader",
-    room: roomName,
+    room: spawn.room.name,
     upgrading: false,
     sourceId: null,
     depositId: null
   };
-  spawn.spawnCreep(size, `Upgrader${Game.time}-${getRandomInt(1000)}`, {
+  const result = spawn.spawnCreep(body, `Upgrader${Game.time}-${getRandomInt(1000)}`, {
     memory
   });
-  Memory.tally.upgraders++;
+  if (result === OK) {
+    Memory.count.upgraders++;
+  }
+  return result;
 };
 
-const spawnBuilder = (spawn, size) => {
+const spawnBuilder = (spawn: StructureSpawn, body: BodyPartConstant[]) => {
   const memory: BuilderMemory = {
     role: "builder",
-    room: roomName,
+    room: spawn.room.name,
     building: false,
     sourceId: null,
     depositId: null
   };
-  spawn.spawnCreep(size, `Builder${Game.time}-${getRandomInt(1000)}`, {
+  const result = spawn.spawnCreep(body, `Builder${Game.time}-${getRandomInt(1000)}`, {
     memory
   });
-  Memory.tally.builders++;
+  if (result === OK) {
+    Memory.count.builders++;
+  }
 };
 
-const spawnRepairer = (spawn, size) => {
+const spawnRepairer = (spawn: StructureSpawn, body: BodyPartConstant[]) => {
   const memory: RepairerMemory = {
     role: "repairer",
-    room: roomName,
+    room: spawn.room.name,
     repairing: false,
     sourceId: null,
     depositId: null
   };
-  spawn.spawnCreep(size, `Repairer${Game.time}-${getRandomInt(1000)}`, {
+  const result = spawn.spawnCreep(body, `Repairer${Game.time}-${getRandomInt(1000)}`, {
     memory
   });
-  Memory.tally.builders++;
+  if (result === OK) {
+    Memory.count.repairers++;
+  }
 };
 
 const bodyGenerator = (parts: BodyPartConfig[]): BodyPartConstant[] => {
-  const body: BodyPartConstant[] = [];
+  let body: BodyPartConstant[] = [];
   for (const part of parts) {
     for (let i = 0; i < part.count; i++) {
       body.push(part.type);
